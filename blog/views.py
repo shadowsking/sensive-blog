@@ -1,5 +1,5 @@
 from django.db.models import Count
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from blog.models import Comment, Post, Tag
 
 
@@ -43,12 +43,12 @@ def index(request):
 
 
 def post_detail(request, slug):
-    post = (
+    post = get_object_or_404(
         Post.objects.popular()
         .prefetch_related('author')
         .prefetch_with_tags()
-        .prefetch_with_comments()
-        .get(slug=slug)
+        .prefetch_with_comments(),
+        slug=slug
     )
 
     serialized_post = {
@@ -81,7 +81,7 @@ def post_detail(request, slug):
 
 
 def tag_filter(request, tag_title):
-    tag = Tag.objects.get(title=tag_title)
+    tag = get_object_or_404(Tag, title=tag_title)
     related_posts = (
         tag.posts.annotate(Count('comments'))[:20]
         .prefetch_related('author')
